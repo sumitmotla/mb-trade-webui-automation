@@ -1,14 +1,16 @@
 {
   "name": "mb-trade-webui-automation",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "description": "Playwright UI test automation for the MultiBank mb.io public website",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "playwright test",
+    "test:chromium": "playwright test --project=chromium",
+    "test:firefox": "playwright test --project=firefox",
+    "test:webkit": "playwright test --project=webkit",
+    "report": "playwright show-report"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Sumit Kumar",
   "type": "commonjs",
   "devDependencies": {
     "@playwright/test": "^1.63.0"
