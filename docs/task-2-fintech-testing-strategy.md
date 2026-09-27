@@ -29,7 +29,7 @@ Risk first. The flows that touch money or account access get tested in depth; ev
 
 **Backend, not just the screen.** A screen can show the right number while the data behind it is wrong. For money flows I'd check the API responses and the transaction records too: one tap creates one order, a retried request doesn't charge twice, and balances add up after every deposit, trade and withdrawal.
 
-**Data accuracy.** Prices, percentages, fees and totals must be correct and rounded properly. While building Task 1, I found the MultiBank website showing prices under one cent as $0.00, and every price as $0.00 when I made the price feed fail. Those are the kinds of display problems I'd check for in the app.
+**Data accuracy.** Prices, percentages, fees and totals must be correct and rounded properly. While building the mb.io web tests in this repository, I found the MultiBank website showing prices under one cent as $0.00, and every price as $0.00 when I made the price feed fail. Those are the kinds of display problems I'd check for in the app.
 
 **Devices and networks.** A small device list based on the expected users: a recent and an older iPhone, a few popular Android phones including a cheaper one, and different screen sizes. Then slow and unstable connections, airplane mode, and switching between Wi-Fi and mobile data. Emulators are fine early on, but the final checks happen on real devices, using the actual store build rather than a debug build.
 
@@ -55,7 +55,7 @@ Small, fast and trusted. A suite nobody trusts is worse than no suite, because p
 - **A few mobile end-to-end tests** for the journeys that matter most: log in, deposit, buy, sell, withdraw and check the history. They run on real iOS and Android devices, for example in a device cloud.
 - **Two levels.** A smoke run of a few minutes on every build, and the full suite before each release.
 - **Its own test data.** Tests create the accounts and balances they need, so a run doesn't depend on what someone changed by hand yesterday.
-- **Stable market data.** Prices move all the time, so tests shouldn't depend on live values. In Task 1, the category test holds the page's own market data response still while it compares, so the next data reload can't upset the result. The same idea could be used in the app's tests.
+- **Stable market data.** Prices move all the time, so tests shouldn't depend on live values. In the mb.io web tests in this repository, the category test holds the page's own market data response still while it compares, so the next data reload can't upset the result. The same idea could be used in the app's tests.
 - **No flaky tests.** A flaky test gets fixed or removed straight away, not rerun until it passes.
 - **Useful failures.** Every failure comes with a screenshot, log or trace, so anyone can tell a real bug from a test problem.
 - **A short manual checklist** for what automation does badly: how screens look, gestures, OS permission pop-ups and the final store build.
@@ -63,7 +63,7 @@ Small, fast and trusted. A suite nobody trusts is worse than no suite, because p
 ## 5. What would keep you up at night about this app specifically and releasing to the public?
 
 - **Money going wrong.** A double tap or a network retry that creates two orders or two withdrawals. Rounding errors that add up over thousands of trades. A balance that doesn't match the records. Users don't forgive these.
-- **Wrong or stale prices.** If the app shows an old price, or $0.00 when a feed fails, people trade on bad information. While building Task 1, I saw the MultiBank website show $0.00 for every coin when I made the price feed fail, and category rankings that lagged behind the displayed prices. That's why this area would get extra attention.
+- **Wrong or stale prices.** If the app shows an old price, or $0.00 when a feed fails, people trade on bad information. While building the mb.io web tests, I saw the MultiBank website show $0.00 for every coin when I made the price feed fail, and category rankings that lagged behind the displayed prices. That's why this area would get extra attention.
 - **Account security.** Account takeover, weak session handling, or one user seeing someone else's data.
 - **Launch-day load.** We probably can't test real launch traffic in two weeks, and a busy market day will push the system harder than any test.
 - **Slow fixes.** A mobile fix has to go through app store review, which can take days. I'd want a way to switch off a broken feature from the server, a staged rollout, and a clear rollback plan.

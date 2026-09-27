@@ -2,23 +2,17 @@
 
 ## Overview
 
-This repository is the Task 1 submission for the MultiBank QA Automation coding challenge (Web UI Automation Framework).
+This repository contains automated UI tests for the public MultiBank website, [mb.io](https://mb.io/en-AE/). The tests are written in JavaScript with Playwright and run in Chromium, Firefox and WebKit. They cover navigation and page layout, the Spot market, important content and links, and negative and edge-case scenarios.
 
-The framework is deliberately small: five page objects, separated test data, and tests whose titles describe product behaviour in plain language.
-
-## At a glance
-
-- **Project:** Playwright web UI automation framework for the MultiBank public website.
-- **Application under test:** [mb.io/en-AE](https://mb.io/en-AE/)
-- **Coverage:** navigation & layout, the Spot market, content & links, and negative/edge-case scenarios.
-- **Browsers:** Chromium, Firefox and WebKit.
-- **Task 2:** the mobile fintech testing strategy is documented separately in [docs/task-2-fintech-testing-strategy.md](docs/task-2-fintech-testing-strategy.md).
+It was built for the MultiBank QA Automation challenge, which also included a separate mobile fintech testing scenario. The written answer to that scenario is in [docs/task-2-fintech-testing-strategy.md](docs/task-2-fintech-testing-strategy.md).
 
 ## Target URL and scope
 
-The assignment references trade.multibank.io. During implementation, that public trading URL redirected to a login flow. The public MultiBank website at mb.io/en-AE, the alternative target provided with the assignment, offered the accessible, no-login flows the assignment requires.
+The challenge named trade.multibank.io as the site to test. When these tests were written, that address redirected to a login page. The challenge gave the public MultiBank website, `https://mb.io/en`, as the fallback, so the tests use that site instead.
 
-This framework therefore focuses on the public MultiBank website. It does not log in, create an account, or enter any personal or financial information.
+When `https://mb.io/en` is opened from the UAE, where these tests were written, the site redirects to `https://mb.io/en-AE`. For that reason, the tests use `https://mb.io/en-AE/` as their base URL.
+
+The tests only use public pages. They do not log in, create an account, or enter any personal or financial information.
 
 ## Technology Stack
 
@@ -43,11 +37,17 @@ This framework therefore focuses on the public MultiBank website. It does not lo
 │   ├── navigation.js           Menu items, destinations, page headings, desktop viewports
 │   ├── spot-market.js          Market categories, display limit, value formats
 │   └── content.js              Explore promotions, app download expectations, Why MultiBank sections
-├── tests/                      One spec file per assignment area
+├── tests/                      One spec file per test area
 │   ├── navigation.spec.js
 │   ├── trading.spec.js
 │   ├── content-and-links.spec.js
 │   └── edge-cases.spec.js
+├── docs/                       QA documents
+│   ├── test-plan.md
+│   ├── test-execution.md
+│   ├── risk-matrix.md
+│   ├── release-readiness.md
+│   └── task-2-fintech-testing-strategy.md
 ├── playwright.config.js        Base URL, browser projects, viewport and reporting
 └── package.json                npm scripts and the Playwright dependency
 ```
@@ -77,7 +77,7 @@ npm test
 | Command | What it runs |
 |---|---|
 | `npm test` | All tests in Chromium, Firefox and WebKit |
-| `npm run test:chromium` | All tests in Chromium only (the development loop) |
+| `npm run test:chromium` | All tests in Chromium only (quickest for local runs) |
 | `npm run test:firefox` | All tests in Firefox only |
 | `npm run test:webkit` | All tests in WebKit only |
 | `npm run report` | Opens the HTML report of the last run |
@@ -91,7 +91,7 @@ npx playwright test -g "mobile layout" --project=chromium
 
 ## Browser Support
 
-The same tests run in three Playwright projects. Each uses Playwright's desktop device settings, which send a normal browser user agent, with a 1440×900 viewport.
+The same tests run in Chromium, Firefox and WebKit, set up as three Playwright projects. Each project uses Playwright's desktop settings for its browser and a 1440×900 window. These settings send a normal browser user agent. Plain headless Chromium sends "HeadlessChrome" instead, which bot protection can treat differently.
 
 | Project | Device settings |
 |---|---|
@@ -99,9 +99,9 @@ The same tests run in three Playwright projects. Each uses Playwright's desktop 
 | `firefox` | Desktop Firefox |
 | `webkit` | Desktop Safari |
 
-Expectations and timeouts are identical in every browser; there are no browser-specific workarounds. The one intentional difference: the broken-link check only compares HTTP status codes, which do not depend on the browser, so it runs once in Chromium and is reported as skipped in Firefox and WebKit.
+Every browser gets the same checks and the same time limits, and there are no browser-specific workarounds. The only difference is the broken-link check. It only compares HTTP status codes, which do not depend on the browser, so it runs once in Chromium and is reported as skipped in Firefox and WebKit.
 
-Tests that need another screen size set it themselves: three desktop sizes for the navigation layout test and 390×844 for the mobile layout test.
+Two tests set their own screen size. The navigation layout test uses three desktop sizes, and the mobile layout test uses 390×844.
 
 ## Test Coverage
 
@@ -121,48 +121,51 @@ Tests that need another screen size set it themselves: three desktop sizes for t
 | Negative / Edge | unknown page address should display the Page Not Found page and a way back home | HTTP 404, the not-found page and a working link back home |
 | | mobile layout should replace the top navigation with a menu containing all expected items | 390×844: menu button, no sideways scrolling, same 7 items, menu closes |
 | | header and footer first-party links should not be broken | Every first-party link in the home page header and footer returns a status below 400 |
-| | spot market should show a retry message when market data times out | Timeout simulated with network interception; message shown, no trading pairs, page still usable |
-
-The assignment asks for at least two edge cases. Four are included because each covers a different real-world failure: a bad or outdated URL, a small screen, a broken link, and a market data service that does not respond.
+| | spot market should show a retry message when market data times out | Timeout simulated with network interception. Message shown, no trading pairs, page still usable |
 
 ## Framework Design
 
-- **Page objects** in `pages/` hold the UI locators and page interactions. They contain no assertions.
-- **Tests** in `tests/` contain the behavioural assertions. Test titles describe the product behaviour being verified.
-- **`SiteLayout`** represents the structure every page shares (header, top navigation, mobile menu, page heading and footer), so no separate components layer is needed.
-- **Test data** in `test-data/` holds values that several tests reuse, or product data that can change, such as menu items, market categories and marketing copy. Values used by a single test stay in that test.
-- **No BasePage, helper, utility or fixture layer.** Each page's `open()` is a single line and tests create their page objects explicitly, so the current scope does not justify that abstraction.
-- **Data-driven tests** are generated from the test data: menu items, desktop viewports, market categories, primary pages, app download expectations and Why MultiBank sections.
-- **Independent tests.** Every test starts from its own page in a fresh browser context, shares no mutable state and can run in any order. `fullyParallel` is enabled, and network interception is only ever set on the test's own page.
-- **No fixed sleeps.** Waiting relies on Playwright's auto-waiting locators and assertions, events and network synchronisation.
+- **Page objects** in `pages/` find the elements on each page and perform page actions, such as opening the page. They do not contain any checks.
+- **Tests** in `tests/` contain all the checks. Each test title describes, in plain language, what the site should do.
+- **`SiteLayout`** in `pages/site-layout.js` holds the parts that every page shares: the header, top navigation, mobile menu, page heading and footer. There are only a few shared page elements, so they are kept in this one file instead of adding a separate component layer.
+- **Test data** in `test-data/` holds values that several tests use, and product content that may change, such as menu items, market categories and marketing text. A value that only one test uses stays in that test.
+- **There is no base page class, helper, utility or fixture layer.** Each page's `open()` method is a single line, and each test creates the page objects it uses, so there is no repeated setup code to share.
+- **Several tests are generated from lists in the test data.** For example, there is one test for each menu item, each desktop screen size, each market category and each phone type. The Why MultiBank test checks each section of the page in a separate step, so the report shows which section failed.
+- **Tests are independent.** Each test opens its own page in a new browser context and does not depend on any other test, so the tests can run in parallel and in any order (`fullyParallel` is turned on). When a test intercepts network requests, it only does so on its own page, so other tests are not affected.
+- **There are no fixed sleeps.** Each step waits for the element, event or network response it needs, using Playwright's built-in waiting.
 
 ## Key Design Decisions
 
 **Base URL.** `https://mb.io/en-AE/` is configured with a trailing slash, and pages are opened with relative paths such as `page.goto('explore')`, so the locale stays in every URL.
 
-**Locators.** Locators use roles and accessible names wherever the site provides them. The Spot market table has no column headers and the coin symbol and name are unlabelled text, so those cells are located by position. These structural locators are kept inside `ExplorePage` with a comment explaining why.
+**Locators.** Locators use roles and accessible names wherever the site provides them. The Spot market table has no column headers, and the coin symbol and name are unlabelled text, so those cells are found by their position. These position-based locators are kept in `ExplorePage`, with a comment explaining why.
 
-**Dynamic market data.** The Spot market reloads its category data about every five seconds, and the rankings can change between reloads. For the category test, the framework captures the application's own market data response (the `market/widget` request) and serves that same response for the page's later reloads during the test. The table can then be compared deterministically with the data the application received. Only this one request is held steady; the rest of the page, including prices, loads live. Exact market values are never asserted: the tests check the relationship between the displayed trading pairs and the response, plus the formats of the displayed values.
+**Market data.** Market prices change all the time, so the tests do not check exact prices. The Spot market also reloads its category lists about every five seconds, and the ranking can change between reloads. To compare the table with the data behind it, the category test keeps the first market data response the page receives (the `market/widget` request) and returns that same response each time the page reloads the lists. The data then stays the same for the whole test. Only this one request is held. Prices and the rest of the page still load live. The other trading tests check the format of each value, such as a price like `$1,234.56`, but not the value itself.
 
-**Store links.** The automated store-resolution check uses the homepage "Download the app" smart link. The OTC Desk App Store and Google Play badges share an Adjust smart link, and the iPhone flow passes through an Adjust app-link page. HTTP-only validation of that badge flow would depend on third-party page content, so the homepage smart link is used for the deterministic redirect assertion. The test requests the link with an iPhone and an Android user agent and checks only the first redirect: the App Store listing for iPhone, and an Android app intent for `com.multibank.app` with the Google Play listing as its fallback. No store page is opened.
+**App store links.** The home page "Download the app" link is a smart link from Adjust, a third-party link service, which sends each phone to its own app store. Two tests request this link, one with an iPhone user agent and one with an Android user agent, and check where the first redirect points. For iPhone, it should be the MultiBank app's App Store page. For Android, it should be an `intent://` link that opens the app `com.multibank.app`, with the app's Google Play page as the fallback. No store page is opened, because store pages differ by country. The App Store and Google Play badges on the OTC Desk page are not used for this check. Both badges share a different smart link, and on iPhone that link first opens an Adjust web page before moving on to the App Store. Checking that extra step over HTTP would make the test depend on the content of Adjust's page.
 
 **Page loading.** Pages are opened with `waitUntil: 'domcontentloaded'`. The browser's full `load` event waits for many third-party marketing scripts and can take many seconds, while every test step already waits for the element it needs.
 
-**Bounded waits for real application behaviour.** Two waits are longer than Playwright's default 5 seconds, and each is explained in the code. The Spot market table and the market data error message each get 15 seconds: during development the table took 7 to 8 seconds to fill, and the page retries a failed request three more times, about 7 seconds, before showing its message. The broken-link check gives each link 10 seconds and records a slow or unreachable link as a failure with its URL.
+**Longer waits.** Three waits are longer than Playwright's default of 5 seconds. Each one is explained in the code:
 
-**Network checks strengthen the UI tests.** Network access is used only where it gives stronger evidence than the UI alone: the market data response, the smart-link redirect, link status codes and the simulated timeout. There is no separate API test framework.
+- The Spot market table gets up to 15 seconds to fill. During development, all 15 trading pairs took 7 to 8 seconds to appear.
+- The market data error message gets up to 15 seconds. After a failed request, the page tries three more times, which takes about 7 seconds, before it shows the message.
+- The mobile menu gets up to 10 seconds to open. Its button can appear before the site's JavaScript is ready, and a tap at that moment does nothing. The test taps again until the menu opens, instead of waiting a fixed time.
+
+Separately, the broken-link check limits each link request to 10 seconds. A slow or unreachable link is recorded as a failure with its URL, and the check carries on with the other links.
+
+**Service workers.** The site installs a service worker from a third-party marketing tool. A few seconds after the page loads, this worker starts handling the page's network requests. Playwright's request interception can't always see requests that go through a service worker. In WebKit, some market data requests got past it, so the tests that intercept that request became unreliable. For this reason, service workers are blocked in the test configuration, in the same way for all three browsers. None of the tested features use this worker.
 
 ## Assumptions and Limitations
 
 **Assumptions**
 
-- "About Us → Why MultiBank" is represented by the site's Why MultiBank page, reached through "Company" in the top navigation (`/company`, heading "Why MultiBank Group?").
-- Store resolution is validated through the deterministic homepage smart-link redirect, as described under Key Design Decisions. The OTC Desk badges are not part of the automated check.
+- The site's company information is on the Why MultiBank page, which is reached through "Company" in the top navigation (`/company`, heading "Why MultiBank Group?"). The Why MultiBank tests use this page.
 
 **Limitations**
 
 - The suite runs against the live production website. Marketing copy, market data and third-party services can change or respond slowly, and such changes show up as test failures.
-- The site chooses the locale region from the visitor's location, for example `/en-AE/` in the UAE. URL assertions check the end of the path, so they do not depend on the locale prefix.
+- The site chooses the region in the URL from the visitor's location. Visitors outside the UAE may be sent to `/en/` instead of `/en-AE/`. URL checks only look at the end of the path, so they pass either way. The expected page content was taken from the UAE version, so the first run from another country should be checked carefully.
 - The broken-link check covers first-party links in the home page header and footer only. Third-party destinations, such as the Hacken security audit, which blocks automated requests, are outside MultiBank's control and are excluded.
 
 ## Test Reporting
@@ -170,4 +173,11 @@ The assignment asks for at least two edge cases. Four are included because each 
 - **List reporter:** one line per test in the terminal, prefixed with the browser it ran in.
 - **HTML reporter:** a full report in `playwright-report/`, opened with `npm run report`. Each result is tagged with its browser.
 - **Failure evidence:** when a test fails, a screenshot and a Playwright trace are kept in `test-results/` and attached to the HTML report. A trace can also be opened directly with `npx playwright show-trace <path-to-trace.zip>`. Passing tests produce no screenshots, traces or videos.
-- The HTML report is generated locally and is not committed to Git; `playwright-report/` and `test-results/` are listed in `.gitignore`.
+- The HTML report is generated locally and is not committed to Git. The `playwright-report/` and `test-results/` folders are listed in `.gitignore`.
+
+## QA Documentation
+
+- [Test plan](docs/test-plan.md): scope, approach and exit criteria for the automated tests
+- [Test execution](docs/test-execution.md): final test results and cross-browser execution history
+- [Risk matrix](docs/risk-matrix.md): what could make a test fail for the wrong reason or let a real problem slip through, and how that is handled
+- [Release readiness checklist](docs/release-readiness.md): what to check after a full test run, and issues found while exploring the site

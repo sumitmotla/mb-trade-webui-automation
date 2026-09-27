@@ -1,10 +1,10 @@
 # Test Plan
 
-This plan covers the Playwright UI tests for the public MultiBank website (Task 1). The full list of tests is in the [README](../README.md#test-coverage). How I would test the mobile trading app from Task 2 is covered separately in the [Task 2 document](task-2-fintech-testing-strategy.md).
+This test plan explains what the automated Playwright tests for the public MultiBank website (mb.io) check, how they check it, and when a test run counts as complete. The full list of tests is in the [README](../README.md#test-coverage).
 
 ## Objective
 
-Check that a visitor who is not logged in can use the main public parts of mb.io: find their way around the site, see correct information in the Spot market, reach the right content and app download links, and get sensible behaviour when something goes wrong.
+Check that a visitor who is not logged in can use the main public parts of mb.io: find their way around the site, see correct information in the Spot market, and reach the right content and app download links. Also check what happens when something goes wrong: an unknown page address should show a Page Not Found page with a link back home, and a market data timeout should show a "Please try again" message.
 
 ## Scope
 
@@ -19,7 +19,7 @@ The automated tests cover four areas:
 
 - Logging in, creating an account, or entering any personal or financial information.
 - Anything behind a login: orders, deposits, withdrawals and balances, including the trading app at trade.mb.io.
-- What external sites show, such as the $MBG token site and the app stores. The tests only check that our links lead there.
+- What external sites show, such as the $MBG token site and the app stores. The tests only check that the site's links lead there.
 - The OTC Desk store badges. Store links are checked through the home page "Download the app" link instead (see the README).
 - Other languages and regions. The tests use the English UAE site (`/en-AE/`).
 - Performance, load, security and accessibility testing. Problems noticed in these areas are listed in the [release readiness checklist](release-readiness.md#known-issues-and-risks).
@@ -44,14 +44,14 @@ Tests don't depend on each other and can run in parallel. There are no fixed wai
 Every test runs in Chromium, Firefox and WebKit, using Playwright's desktop settings for each browser and a 1440×900 window. In addition:
 
 - The desktop layout test runs at 1280×720, 1366×768 and 1920×1080.
-- The mobile layout test runs at 390×844. It changes the window size only; it doesn't emulate a particular phone.
+- The mobile layout test runs at 390×844. It only changes the window size. It doesn't emulate a particular phone.
 - The broken-link test only checks HTTP status codes, which are the same in every browser, so it runs in Chromium only.
 
 ## Test environment
 
 - The tests run against the live public site, https://mb.io/en-AE/, so they need internet access and see real content and data. No accounts or test users are needed.
 - The suite has been developed on macOS with Node.js 24.21.0 and Playwright 1.63, using the npm scripts in the README.
-- The site picks its locale region from the visitor's location: `/en-AE/` from the UAE, and possibly `/en/` elsewhere. URL checks only look at the end of the path, so they work with either.
+- The site picks its locale region from the visitor's location: `/en-AE/` from the UAE, and possibly `/en/` elsewhere. URL checks only look at the end of the path, so they work with either. The expected page content was taken from the UAE version.
 
 ## Test data
 
@@ -63,7 +63,7 @@ Values that more than one test uses, or that marketing may change, live in `test
 
 For longer page text, the tests check a short key sentence instead of a whole paragraph, so a small copy edit doesn't break them.
 
-**Market data** changes on its own: the Explore page reloads its category lists about every five seconds, and the ranking can change between reloads. The category test keeps the first market data response the page receives and gives the page that same response when it reloads, so the table is compared with data that stays still. Prices and the rest of the page stay live, and the other trading tests only check that values look right (a price like `$1,234.56`), not what they are.
+**Market data** is live and changes all the time. The tests check the format of values, such as a price like `$1,234.56`, but never the exact values. The category test holds the market data still while it compares the table with it, as described in the [README](../README.md#key-design-decisions).
 
 ## Entry and exit criteria
 
@@ -82,6 +82,4 @@ For longer page text, the tests check a short key sentence instead of a whole pa
 ## Known limitations
 
 - The tests depend on the live website. Changes to marketing copy, market data or third-party services show up as failures, and some of those will be content changes rather than bugs.
-- Expected page content was taken from the UAE site (`/en-AE/`).
 - Only first-party links in the home page header and footer are checked for broken links. Other companies' sites, such as the Hacken audit page, are outside MultiBank's control and are left out.
-- The two assumptions behind the tests (the Why MultiBank page and the home page app link) are listed in the README.
