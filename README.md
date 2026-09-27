@@ -173,7 +173,7 @@ Separately, the broken-link check limits each link request to 10 seconds. A slow
 - **List reporter:** one line per test in the terminal, prefixed with the browser it ran in.
 - **HTML reporter:** a full report in `playwright-report/`, opened with `npm run report`. Each result is tagged with its browser.
 - **Failure evidence:** when a test fails, a screenshot and a Playwright trace are kept in `test-results/` and attached to the HTML report. A trace can also be opened directly with `npx playwright show-trace <path-to-trace.zip>`. Passing tests produce no screenshots, traces or videos.
-- The HTML report is generated locally and is not committed to Git. The `playwright-report/` and `test-results/` folders are listed in `.gitignore`.
+- The HTML report is generated locally in playwright-report/. A copy of the final run is saved as docs/final-run-report.html. The `playwright-report/` and `test-results/` folders are listed in `.gitignore`.
 
 ## QA Documentation
 
