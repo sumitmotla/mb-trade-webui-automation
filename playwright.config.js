@@ -25,6 +25,12 @@ module.exports = defineConfig({
     // page.goto('explore'), which resolves to https://mb.io/en-AE/explore.
     baseURL: 'https://mb.io/en-AE/',
 
+    // The site's marketing SDK (MoEngage) installs a service worker that takes over
+    // the page's network requests a few seconds after load. page.route() cannot always
+    // see requests that go through a service worker (WebKit lets them through), which
+    // breaks the tests that simulate or hold market data. No tested feature uses it.
+    serviceWorkers: 'block',
+
     // Failure evidence only; passing tests produce no artifacts.
     // Raw screenshots and traces are written to test-results/.
     screenshot: 'only-on-failure',

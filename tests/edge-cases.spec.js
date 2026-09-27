@@ -40,7 +40,12 @@ test('mobile layout should replace the top navigation with a menu containing all
   await expect(siteLayout.mobileMenuButton).toBeVisible();
   expect(await siteLayout.hasHorizontalScroll(), 'page should not scroll sideways').toBe(false);
 
-  await siteLayout.mobileMenuButton.click();
+  // The menu button is visible before the page's JavaScript is ready,
+  // and a tap at that moment does nothing, so tap until the menu opens.
+  await expect(async () => {
+    await siteLayout.mobileMenuButton.click();
+    await expect(siteLayout.mobileMenu).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 10_000 });
   await expect(siteLayout.mobileMenuLinks).toHaveText(expectedNavigationLabels);
 
   await siteLayout.closeMobileMenuButton.click();
