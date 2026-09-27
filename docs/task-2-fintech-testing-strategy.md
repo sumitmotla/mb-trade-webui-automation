@@ -12,9 +12,9 @@ With understanding, not test cases. In the first day or two I would:
 - **Get access to everything.** Test builds for both platforms, the test environment, test accounts with test money, admin tools, logs and crash reports.
 - **Use the app myself** on one iPhone and one Android phone. A quick tour of the main flows tells me more about the real state of the app than any document.
 - **Follow the money.** Deposit, balance, buy or sell, balance again, withdraw. For each step I want to know where the money is recorded, what can fail, and what the user sees when it does.
-- **Write a short risk list** and agree with the team what must work before release. Two weeks isn't enough to test everything, so we need to agree early on what "ready" means.
+- **Write a short risk list** and agree with the team what must work before release. Two weeks isn't enough to test everything, so we need to agree early on what "ready" means. I've found this especially important in fast-moving teams, where priorities can change quickly.
 
-I'd also agree how we rate bugs. In a trading app, anything that can show a wrong balance or move money wrongly is a blocker, even if it's rare.
+I'd also agree how we rate bugs. In a trading app, anything that can show a wrong balance or move money wrongly is treated as a potential blocker, even if it's rare. Whether it actually blocks the release depends on the impact and whether there's a safe workaround.
 
 ## 2. How would you approach testing this app?
 
@@ -27,7 +27,7 @@ Risk first. The flows that touch money or account access get tested in depth; ev
 - the price changing between the quote and the confirmation
 - the app going to the background, or the session expiring, in the middle of a transaction
 
-**Backend, not just the screen.** A screen can show the right number while the data behind it is wrong. For money flows I'd check the API responses and the transaction records too: one tap creates one order, a retried request doesn't charge twice, and balances add up after every deposit, trade and withdrawal.
+**Backend, not just the screen.** A screen can show the right number while the data behind it is wrong. Having worked on trading and payment systems, I don't rely only on what the UI shows. For money flows I'd check the API responses and the transaction records too: one tap creates one order, a retried request doesn't charge twice, and balances add up after every deposit, trade and withdrawal.
 
 **Data accuracy.** Prices, percentages, fees and totals must be correct and rounded properly. While building the mb.io web tests in this repository, I found the MultiBank website showing prices under one cent as $0.00, and every price as $0.00 when I made the price feed fail. Those are the kinds of display problems I'd check for in the app.
 
@@ -39,7 +39,7 @@ Risk first. The flows that touch money or account access get tested in depth; ev
 
 ## 3. What does QA look like inside a sprint, from ticket creation through to regression?
 
-- **Refinement.** I read tickets before they enter the sprint. Are the acceptance criteria clear and testable? What are the edge cases? What test data do we need? A question here costs minutes; the same question after the code is written costs days.
+- **Refinement.** I read tickets before they enter the sprint. Are the acceptance criteria clear and testable? What are the edge cases? What test data do we need? In previous teams, getting involved at this stage helped me catch unclear requirements before they turned into bugs. A question here costs minutes; the same question after the code is written costs days.
 - **Planning.** Testing time is part of the estimate, not something squeezed in at the end.
 - **During development.** I prepare test ideas and test data while the feature is being built, and talk to the developer about edge cases early. Developers own the unit tests; I look at how the feature behaves as a whole.
 - **Testing the story.** When the build is ready, I test the acceptance criteria, then explore around them on iOS and Android. Every bug gets clear steps, the device and OS version, and a screenshot or video.
@@ -56,7 +56,7 @@ Small, fast and trusted. A suite nobody trusts is worse than no suite, because p
 - **Two levels.** A smoke run of a few minutes on every build, and the full suite before each release.
 - **Its own test data.** Tests create the accounts and balances they need, so a run doesn't depend on what someone changed by hand yesterday.
 - **Stable market data.** Prices move all the time, so tests shouldn't depend on live values. In the mb.io web tests in this repository, the category test holds the page's own market data response still while it compares, so the next data reload can't upset the result. The same idea could be used in the app's tests.
-- **No flaky tests.** A flaky test gets fixed or removed straight away, not rerun until it passes.
+- **No flaky tests.** Flaky tests should be fixed or removed quickly, not rerun until they pass, because repeated unreliable failures make the regression results harder to trust.
 - **Useful failures.** Every failure comes with a screenshot, log or trace, so anyone can tell a real bug from a test problem.
 - **A short manual checklist** for what automation does badly: how screens look, gestures, OS permission pop-ups and the final store build.
 
